@@ -1,0 +1,28 @@
+{
+  "name": "sqlite-svr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaynsw/sqlite-svr.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaynsw/sqlite-svr/issues"
+  },
+  "homepage": "https://github.com/jaynsw/sqlite-svr#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "middleware-async": "^1.3.2",
+    "sqlite3": "^5.0.2",
+    "squel": "^5.13.0"
+  }
+}

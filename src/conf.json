@@ -1,0 +1,6 @@
+{
+    "db": {
+        "path": "/Users/jay/Documents/GitHub/sqlite-svr/sqlite-svr/bustake.db"
+    },
+    "port": 4001
+}
