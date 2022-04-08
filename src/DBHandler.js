@@ -8,6 +8,7 @@ async function get(req, res) {
         res.json({row});
     } catch (err) {
         let error = JSON.stringify(err, replaceErrors)
+        console.log(error);
         res.json({error});
     }
 }
@@ -33,6 +34,7 @@ async function list(req, res) {
         res.json({rows});
     } catch (err) {
         let error = JSON.stringify(err, replaceErrors)
+        console.log(error);
         res.json({error});
     }
 }
@@ -45,6 +47,7 @@ async function update(req, res) {
         res.json({lastID, changes});
     } catch (err) {
         let error = JSON.stringify(err, replaceErrors)
+        console.log(error);
         res.json({error});
     }
 }
