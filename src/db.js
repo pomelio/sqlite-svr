@@ -1,12 +1,10 @@
-const { registerValueHandler } = require('squel');
 
 var sql = require('squel').useFlavour('mysql');
 const sqlite3 = require('sqlite3').verbose();
+let db_path = process.cwd() + '/' + process.env.db_name;
+console.log('--sqlite--' + db_path);
 
-const conf = require('./conf.json');
-
-
-let _db = new sqlite3.Database(conf.db.path, (err) => {
+let _db = new sqlite3.Database(db_path, (err) => {
     if (err) {
         throw err;
     }
@@ -27,7 +25,7 @@ function clean(obj) {
     return obj;
 }
 
-function list(text,  values) {
+function list(text, values) {
     
     return new Promise((resolve, reject) =>  {
         _db.all(text, ...values, (err, rows)=> {
@@ -43,6 +41,7 @@ function list(text,  values) {
 }
 
 function get(text, values) {
+   
     
     return new Promise((resolve, reject) =>  {
         _db.get(text, ...values, (err, row)=> {
@@ -62,7 +61,7 @@ function get(text, values) {
 
 
 function update(text, values) {
-    
+   
     return new Promise((resolve, reject) =>  {
         _db.run(text, ...values, (err)=> {
             if (err) {
@@ -89,10 +88,48 @@ function close() {
     
 }
 
+async function deleteByID(tbl, id) {
+    let ql = sql.delete();
+    ql.from(tbl);
+
+    ql.where('id=?', id);
+    await update(ql);
+    
+    return id;
+}
+
+async function getByID(tbl, id) {
+    let ql = sql.select();
+    ql.from(tbl);
+
+    ql.where('id=?', id);
+    let obj = await get(ql);
+    if (obj) {
+        return clean(obj);
+    }
+    return null;
+}
+
+async function existsByID(tbl, id) {
+    let ql = sql.select();
+    ql.field('1');
+    ql.from(tbl);
+
+    ql.where('id=?', id);
+    let obj = await get(ql);
+    if (obj) {
+        return true;
+    }
+    return false;
+}
+
 
 module.exports = {
     get,
     list,
     update,
     close,
+    getByID,
+    deleteByID,
+    existsByID,
 }

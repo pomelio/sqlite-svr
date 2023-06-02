@@ -1,67 +1,70 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const conf  = require('./conf.json');
-
-const app = express();
-const port = conf.port;
-
-const dbRouter = require('./DBRouter');
+const dotenv = require("dotenv");
+dotenv.config();
+const Router = require("koa-router");
+const { koaBody } = require('koa-body');
+var serve = require('koa-static');
 
 
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
 
-app.use(cors());
+const Koa = require("koa");
+const cors = require("@koa/cors");
 
-app.use(bodyParser.json({
-	limit: '10mb'
-}));
+const logger = require("./logger");
 
-app.use(express.static('public'));
 
-app.use((req, res, next) => {
-	console.log(req.originalUrl);
-	next();
+
+const koaInstance = new Koa();
+
+let publicFolder = process.cwd() + '/public';
+koaInstance.use(serve(publicFolder));
+
+
+let api = {};
+
+
+koaInstance.use(async (ctx, next) => {
+	ctx.set('Access-Control-Allow-Origin', '*');
+	ctx.set('Access-Control-Allow-Credentials', 'true');
+	await next();
 });
 
-app.use(function(req, res, next){
-	if (req.is('text/*')) {
-	  req.text = '';
-	  req.setEncoding('utf8');
-	  req.on('data', function(chunk){ req.text += chunk });
-	  req.on('end', next);
-	} else {
-	  next();
+koaInstance.use(async (ctx, next) => {
+	try {
+		console.log(`${ctx.method}:${ctx.originalUrl}`);
+		await next();
+	} catch (err) {
+		// will only respond with JSON
+		logger.error(err);
+		let errStr = err.toString();
+		ctx.status = err.statusCode || err.status || 500;
+		ctx.body = {
+			message: errStr,
+		};
 	}
 });
 
-app.use( (err, req, res, next) => {
-	console.log(err);
-	next(err)
-});
+koaInstance.use(cors());
 
-app.use((req, res, next) => {
-	res.setHeader('Last-Modified', (new Date()).toUTCString());
-	next();
-});
+//koaInstance.use(bodyParser({ enableTypes: ["json", "form", "text", "xml"] }));
 
-app.use('/db', dbRouter);
+koaInstance.use(koaBody({ multipart: true }));
 
-app.listen(port, () => {
-	console.log(`db server listening at http://localhost:${port}`);
-});
+const router = new Router();
 
-process.on('SIGINT', function() {
-    console.log('shutdown...');
-    const db = require('./db');
-    db.close().then(msg => {
-        console.log('shutdown...done');
-        process.exit();
-    }).catch(err =>{
-        console.log('shutdown...error');
-        process.exit();
-    });
-   
-});
+const {list, get, update} = require('./DBHandler')(api);
+
+
+router.post('/db/list', list);
+router.post('/db/get', get);
+router.post('/db/update', update);
+
+koaInstance.use(router.allowedMethods());
+koaInstance.use(router.routes());
+
+koaInstance.api = api;
+
+
+module.exports = koaInstance;
+
+
+
