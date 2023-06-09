@@ -24,11 +24,11 @@ module.exports = function(api) {
         let {text, values}  = body;
         try {
             let row = await db.get(text, values);
-            res.json({row});
+            ctx.body = {row};
         } catch (err) {
             let error = JSON.stringify(err, replaceErrors)
             console.log(error);
-            res.json({error});
+            ctx.body ={error};
         }
     }
 
@@ -53,11 +53,11 @@ module.exports = function(api) {
         let {text, values}  = body;
         try {
             let {lastID, changes} = await db.update(text, values);
-            res.json({lastID, changes});
+            ctx.body = {lastID, changes};
         } catch (err) {
             let error = JSON.stringify(err, replaceErrors)
             console.log(error);
-            res.json({error});
+            ctx.body ={error};
         }
     }
 
