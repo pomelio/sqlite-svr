@@ -1,0 +1,16 @@
+[Unit]
+Description=sqlite-svr
+Documentation=https://example.com
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/sqlite-svr
+Environment=NODE_PORT=4010
+Type=simple
+User=ubuntu
+Group=ubuntu
+ExecStart=/home/ubuntu/node/node-v18.16.1-linux-x64/bin/node ./src/server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
