@@ -1,5 +1,7 @@
 const db = require('./db');
 
+const logger = require("./logger");
+
 function replaceErrors(key, value) {
     if (value instanceof Error) {
         var error = {};
@@ -22,6 +24,7 @@ module.exports = function(api) {
         let body = ctx.request.body;
         
         let {text, values}  = body;
+        logger.info(`get->${text}`);
         try {
             let row = await db.get(text, values);
             ctx.body = {row};
@@ -36,6 +39,7 @@ module.exports = function(api) {
     
         let body = ctx.request.body;
         let {text, values}  = body;
+        logger.info(`list->${text}`);
         try {
             let rows = await db.list(text, values);
             ctx.body = {rows};
@@ -51,6 +55,7 @@ module.exports = function(api) {
         let body = ctx.request.body;
 
         let {text, values}  = body;
+        logger.info(`update->${text}`);
         try {
             let {lastID, changes} = await db.update(text, values);
             ctx.body = {lastID, changes};
