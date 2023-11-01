@@ -1,14 +1,26 @@
 
 var sql = require('squel').useFlavour('mysql');
 const sqlite3 = require('sqlite3').verbose();
-let db_path = process.cwd() + '/' + process.env.db_name;
-console.log('--sqlite--' + db_path);
 
-let _db = new sqlite3.Database(db_path, (err) => {
-    if (err) {
-        throw err;
+
+var _DB_MAP = {};
+
+
+function getDB(db_name){
+    let db_path = process.cwd() + '/db/' + db_name + '.db';
+    console.log('--sqlite--' + db_path);
+    if (db_name in _DB_MAP) {
+        return _DB_MAP[db_name];
     }
-});
+    let db = new sqlite3.Database(db_path, (err) => {
+        if (err) {
+            throw err;
+        }
+    });
+    _DB_MAP[db_name] = db;
+    return db;
+}
+
 
 
 function clean(obj) {
@@ -25,10 +37,10 @@ function clean(obj) {
     return obj;
 }
 
-function list(text, values) {
+function list(db, text, values) {
     
     return new Promise((resolve, reject) =>  {
-        _db.all(text, ...values, (err, rows)=> {
+        getDB(db).all(text, ...values, (err, rows)=> {
             if (err) {
                 reject(err);
                 return;
@@ -40,11 +52,11 @@ function list(text, values) {
     });
 }
 
-function get(text, values) {
+function get(db, text, values) {
    
     
     return new Promise((resolve, reject) =>  {
-        _db.get(text, ...values, (err, row)=> {
+        getDB(db).get(text, ...values, (err, row)=> {
             if (err) {
                 reject(err);
                 return;
@@ -60,10 +72,10 @@ function get(text, values) {
 }
 
 
-function update(text, values) {
+function update(db, text, values) {
    
     return new Promise((resolve, reject) =>  {
-        _db.run(text, ...values, (err)=> {
+        getDB(db).run(text, ...values, (err)=> {
             if (err) {
                 reject(err);
                 return;
@@ -75,48 +87,50 @@ function update(text, values) {
     });
 }
 
-function close() {
+function close(db) {
     return new Promise((resolve, reject) =>  {
-        _db.close((err) => {
+        getDB(db).close((err) => {
+            delete _DB_MAP[db];
             if (err) {
                 reject(err);
                 return;
             }
+
             resolve('OK');
         });
     });
     
 }
 
-async function deleteByID(tbl, id) {
+async function deleteByID(db, tbl, id) {
     let ql = sql.delete();
     ql.from(tbl);
 
     ql.where('id=?', id);
-    await update(ql);
+    await update(db, ql);
     
     return id;
 }
 
-async function getByID(tbl, id) {
+async function getByID(db, tbl, id) {
     let ql = sql.select();
     ql.from(tbl);
 
     ql.where('id=?', id);
-    let obj = await get(ql);
+    let obj = await get(db, ql);
     if (obj) {
         return clean(obj);
     }
     return null;
 }
 
-async function existsByID(tbl, id) {
+async function existsByID(db, tbl, id) {
     let ql = sql.select();
     ql.field('1');
     ql.from(tbl);
 
     ql.where('id=?', id);
-    let obj = await get(ql);
+    let obj = await get(db, ql);
     if (obj) {
         return true;
     }

@@ -11,7 +11,7 @@ const cors = require("@koa/cors");
 
 const logger = require("./logger");
 
-
+const {jwtDecode} = require('./utils');
 
 const koaInstance = new Koa();
 
@@ -43,6 +43,35 @@ koaInstance.use(async (ctx, next) => {
 	}
 });
 
+async function authJWT(ctx, next) {
+	if (!ctx.header || !ctx.header.authorization) {
+		ctx.throw(403, "ER_ACCOUNT");
+	}
+
+	const parts = ctx.header.authorization.trim().split(' ');
+
+	if (parts.length === 2) {
+		const scheme = parts[0];
+		const credentials = parts[1];
+
+		if (/^Bearer$/i.test(scheme)) {
+			try {
+				let decoded = jwtDecode(credentials);
+				logger.info("jwt auth success." + decoded.db);
+				
+
+				ctx.state.db = decoded.db;
+				return next();
+			}catch(err) {
+				ctx.throw(403, "ER_ACCOUNT");
+			}
+			
+		}
+	}
+	
+	ctx.throw(403,"ER_ACCOUNT");
+}
+
 koaInstance.use(cors());
 
 //koaInstance.use(bodyParser({ enableTypes: ["json", "form", "text", "xml"] }));
@@ -54,9 +83,9 @@ const router = new Router();
 const {list, get, update} = require('./DBHandler')(api);
 
 
-router.post('/db/list', list);
-router.post('/db/get', get);
-router.post('/db/update', update);
+router.post('/db/list', authJWT, list);
+router.post('/db/get', authJWT, get);
+router.post('/db/update', authJWT, update);
 
 koaInstance.use(router.allowedMethods());
 koaInstance.use(router.routes());
