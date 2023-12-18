@@ -12,7 +12,7 @@ function getDB(db_name){
     if (db_name in _DB_MAP) {
         return _DB_MAP[db_name];
     }
-    let db = new sqlite3.Database(db_path, (err) => {
+    let db = new sqlite3.Database(db_path, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if (err) {
             throw err;
         }
